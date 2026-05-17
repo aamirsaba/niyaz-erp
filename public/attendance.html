@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaz ERP - Attendance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <nav>
+            <h1>🏢 Niyaz International ERP</h1>
+            <div>
+                <a href="index.html">Dashboard</a>
+                <a href="workers.html">Workers</a>
+                <a href="sites.html">Sites</a>
+                <a href="attendance.html" class="active">Attendance</a>
+                <a href="tasks.html">Tasks</a>
+            </div>
+        </nav>
+        
+        <main>
+            <h2>Daily Attendance</h2>
+            
+            <div class="form-card">
+                <h3>✅ Mark Attendance</h3>
+                <select id="attendanceWorker"></select>
+                <select id="attendanceSite"></select>
+                <select id="attendanceStatus">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Late">Late</option>
+                    <option value="Half Day">Half Day</option>
+                </select>
+                <button onclick="markAttendance()">Mark Attendance</button>
+            </div>
+
+            <div class="table-container">
+                <h3>📋 Today's Attendance</h3>
+                <table id="attendanceTable">
+                    <thead><tr><th>Worker</th><th>Site</th><th>Check In</th><th>Status</th></tr></thead>
+                    <tbody id="attendanceList"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadWorkersAndSites() {
+            const workers = await fetch('/api/workers').then(r => r.json());
+            const sites = await fetch('/api/sites').then(r => r.json());
+            
+            const workerSelect = document.getElementById('attendanceWorker');
+            workerSelect.innerHTML = workers.map(w => `<option value="${w.id}">${w.name}</option>`);
+            
+            const siteSelect = document.getElementById('attendanceSite');
+            siteSelect.innerHTML = sites.map(s => `<option value="${s.id}">${s.name}</option>`);
+        }
+        
+        async function loadTodayAttendance() {
+            const attendance = await fetch('/api/attendance/today').then(r => r.json());
+            const tbody = document.getElementById('attendanceList');
+            tbody.innerHTML = attendance.map(a => `
+                <tr>
+                    <td>${a.worker_name}</td>
+                    <td>${a.site_name}</td>
+                    <td>${a.check_in || '-'}</td>
+                    <td>${a.status}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function markAttendance() {
+            const worker_id = document.getElementById('attendanceWorker').value;
+            const site_id = document.getElementById('attendanceSite').value;
+            const status = document.getElementById('attendanceStatus').value;
+            const date = new Date().toISOString().split('T')[0];
+            const check_in = new Date().toLocaleTimeString();
+            
+            await fetch('/api/attendance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({worker_id, site_id, date, check_in, status})
+            });
+            
+            loadTodayAttendance();
+            alert('Attendance marked successfully');
+        }
+        
+        loadWorkersAndSites();
+        loadTodayAttendance();
+    </script>
+</body>
+</html>

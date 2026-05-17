@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaz ERP - Workers</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <nav>
+            <h1>🏢 Niyaz International ERP</h1>
+            <div>
+                <a href="index.html">Dashboard</a>
+                <a href="workers.html" class="active">Workers</a>
+                <a href="sites.html">Sites</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="tasks.html">Tasks</a>
+            </div>
+        </nav>
+        
+        <main>
+            <h2>Worker Management</h2>
+            
+            <div class="form-card">
+                <h3>➕ Add New Worker</h3>
+                <input type="text" id="workerName" placeholder="Full Name">
+                <input type="text" id="workerPhone" placeholder="Phone Number">
+                <select id="workerSkill">
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="HVAC">HVAC</option>
+                    <option value="MEP">MEP</option>
+                    <option value="Security">Security</option>
+                    <option value="General">General Labour</option>
+                </select>
+                <button onclick="addWorker()">Add Worker</button>
+            </div>
+
+            <div class="table-container">
+                <h3>📋 Worker Directory</h3>
+                <table id="workersTable">
+                    <thead>
+                        <tr><th>ID</th><th>Name</th><th>Phone</th><th>Skill</th><th>Status</th></tr>
+                    </thead>
+                    <tbody id="workersList"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadWorkers() {
+            const response = await fetch('/api/workers');
+            const workers = await response.json();
+            const tbody = document.getElementById('workersList');
+            tbody.innerHTML = workers.map(w => `
+                <tr>
+                    <td>${w.id}</td>
+                    <td>${w.name}</td>
+                    <td>${w.phone || '-'}</td>
+                    <td>${w.skill || '-'}</td>
+                    <td>${w.status}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function addWorker() {
+            const name = document.getElementById('workerName').value;
+            const phone = document.getElementById('workerPhone').value;
+            const skill = document.getElementById('workerSkill').value;
+            
+            if(!name) {
+                alert('Please enter worker name');
+                return;
+            }
+            
+            await fetch('/api/workers', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, phone, skill})
+            });
+            
+            document.getElementById('workerName').value = '';
+            document.getElementById('workerPhone').value = '';
+            loadWorkers();
+        }
+        
+        loadWorkers();
+    </script>
+</body>
+</html>

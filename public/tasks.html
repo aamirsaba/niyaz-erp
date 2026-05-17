@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaz ERP - Tasks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <nav>
+            <h1>🏢 Niyaz International ERP</h1>
+            <div>
+                <a href="index.html">Dashboard</a>
+                <a href="workers.html">Workers</a>
+                <a href="sites.html">Sites</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="tasks.html" class="active">Tasks</a>
+            </div>
+        </nav>
+        
+        <main>
+            <h2>Task Management</h2>
+            
+            <div class="form-card">
+                <h3>📝 Assign New Task</h3>
+                <select id="taskWorker"></select>
+                <select id="taskSite"></select>
+                <input type="text" id="taskDesc" placeholder="Task Description" style="width: 100%;">
+                <input type="date" id="taskDue">
+                <button onclick="assignTask()">Assign Task</button>
+            </div>
+
+            <div class="table-container">
+                <h3>⏳ Pending Tasks</h3>
+                <table id="tasksTable">
+                    <thead><tr><th>Task</th><th>Assigned To</th><th>Site</th><th>Due Date</th><th>Status</th></tr></thead>
+                    <tbody id="tasksList"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadWorkersAndSites() {
+            const workers = await fetch('/api/workers').then(r => r.json());
+            const sites = await fetch('/api/sites').then(r => r.json());
+            
+            const workerSelect = document.getElementById('taskWorker');
+            workerSelect.innerHTML = workers.map(w => `<option value="${w.id}">${w.name}</option>`);
+            
+            const siteSelect = document.getElementById('taskSite');
+            siteSelect.innerHTML = sites.map(s => `<option value="${s.id}">${s.name}</option>`);
+        }
+        
+        async function loadPendingTasks() {
+            const tasks = await fetch('/api/tasks/pending').then(r => r.json());
+            const tbody = document.getElementById('tasksList');
+            tbody.innerHTML = tasks.map(t => `
+                <tr>
+                    <td>${t.task_description}</td>
+                    <td>${t.worker_name}</td>
+                    <td>${t.site_name}</td>
+                    <td>${t.due_date || '-'}</td>
+                    <td>${t.status}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function assignTask() {
+            const worker_id = document.getElementById('taskWorker').value;
+            const site_id = document.getElementById('taskSite').value;
+            const task_description = document.getElementById('taskDesc').value;
+            const due_date = document.getElementById('taskDue').value;
+            
+            if(!task_description) {
+                alert('Please enter task description');
+                return;
+            }
+            
+            await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({worker_id, site_id, task_description, due_date})
+            });
+            
+            document.getElementById('taskDesc').value = '';
+            document.getElementById('taskDue').value = '';
+            loadPendingTasks();
+            alert('Task assigned successfully');
+        }
+        
+        loadWorkersAndSites();
+        loadPendingTasks();
+    </script>
+</body>
+</html>

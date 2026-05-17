@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaz ERP - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <nav>
+            <h1>🏢 Niyaz International ERP</h1>
+            <div>
+                <a href="index.html" class="active">Dashboard</a>
+                <a href="workers.html">Workers</a>
+                <a href="sites.html">Sites</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="tasks.html">Tasks</a>
+            </div>
+        </nav>
+        
+        <main>
+            <h2>Labour Management Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalWorkers">0</h3>
+                    <p>Total Workers</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalSites">0</h3>
+                    <p>Active Sites</p>
+                </div>
+                <div class="stat-card present">
+                    <h3 id="presentToday">0</h3>
+                    <p>Present Today</p>
+                </div>
+                <div class="stat-card pending">
+                    <h3 id="pendingTasks">0</h3>
+                    <p>Pending Tasks</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; background: #e8f4f8; padding: 20px; border-radius: 12px;">
+                <h3>✅ Today at a Glance</h3>
+                <p id="attendanceSummary">Loading...</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const response = await fetch('/api/dashboard/stats');
+            const stats = await response.json();
+            
+            document.getElementById('totalWorkers').textContent = stats.total_workers || 0;
+            document.getElementById('totalSites').textContent = stats.total_sites || 0;
+            document.getElementById('presentToday').textContent = stats.present_today || 0;
+            document.getElementById('pendingTasks').textContent = stats.pending_tasks || 0;
+            
+            const attendanceRate = stats.total_workers > 0 ? ((stats.present_today / stats.total_workers) * 100).toFixed(1) : 0;
+            document.getElementById('attendanceSummary').innerHTML = `
+                📊 Attendance Rate: ${attendanceRate}%<br>
+                👥 ${stats.present_today} out of ${stats.total_workers} workers present today<br>
+                📋 ${stats.pending_tasks} tasks need attention
+            `;
+        }
+        
+        loadStats();
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

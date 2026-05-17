@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaz ERP - Sites</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <nav>
+            <h1>🏢 Niyaz International ERP</h1>
+            <div>
+                <a href="index.html">Dashboard</a>
+                <a href="workers.html">Workers</a>
+                <a href="sites.html" class="active">Sites</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="tasks.html">Tasks</a>
+            </div>
+        </nav>
+        
+        <main>
+            <h2>Site Management</h2>
+            
+            <div class="form-card">
+                <h3>➕ Add New Site/Client Location</h3>
+                <input type="text" id="siteName" placeholder="Site Name (e.g., Al Mouj Tower)">
+                <input type="text" id="siteLocation" placeholder="Location">
+                <input type="text" id="clientName" placeholder="Client Name">
+                <button onclick="addSite()">Add Site</button>
+            </div>
+
+            <div class="table-container">
+                <h3>📍 All Sites</h3>
+                <table id="sitesTable">
+                    <thead><tr><th>ID</th><th>Site Name</th><th>Location</th><th>Client</th></tr></thead>
+                    <tbody id="sitesList"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadSites() {
+            const response = await fetch('/api/sites');
+            const sites = await response.json();
+            const tbody = document.getElementById('sitesList');
+            tbody.innerHTML = sites.map(s => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.location || '-'}</td>
+                    <td>${s.client_name || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function addSite() {
+            const name = document.getElementById('siteName').value;
+            const location = document.getElementById('siteLocation').value;
+            const client_name = document.getElementById('clientName').value;
+            
+            if(!name) {
+                alert('Please enter site name');
+                return;
+            }
+            
+            await fetch('/api/sites', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, location, client_name})
+            });
+            
+            document.getElementById('siteName').value = '';
+            document.getElementById('siteLocation').value = '';
+            document.getElementById('clientName').value = '';
+            loadSites();
+        }
+        
+        loadSites();
+    </script>
+</body>
+</html>
